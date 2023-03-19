@@ -47,6 +47,11 @@ struct tuple_element<Index, const volatile Tuple> {
   using type = std::add_cv_t<tuple_element_t<Index, Tuple>>;
 };
 
+namespace tuple_impl {
+template <typename... Types>
+concept default_ctor = (std::is_default_constructible_v<Types> && ...);
+}
+
 template <>
 class tuple<> {
 public:
@@ -59,13 +64,11 @@ public:
   using rest = tuple<Rest...>;
   using rest::rest;
 
-  constexpr tuple()
-      requires(std::is_default_constructible_v<First>&&
-                   std::is_default_constructible_v<tuple<Rest...>>)
+  constexpr tuple() requires(tuple_impl::default_ctor<First, Rest...>)
       : first(){};
 
   constexpr tuple()
-      requires (!(std::is_default_constructible_v<First>)) = delete;
+      requires(!(std::is_default_constructible_v<First>)) = delete;
 
   constexpr tuple(const Rest&... args)
       requires(sizeof...(Rest) >= 1 && (std::is_constructible_v<Rest> && ...))
@@ -86,8 +89,8 @@ public:
 
   template <typename UFirst, typename... URest>
   constexpr tuple(const tuple<UFirst, URest...>& other)
-      : first(other.first),
-        rest(*static_cast<tuple<URest...> const*>(&other)) {}
+      : first(other.first), rest(*static_cast<tuple<URest...> const*>(&other)) {
+  }
 
   template <typename UFirst, typename... URest>
   constexpr tuple(tuple<UFirst, URest...>&& other)
@@ -187,8 +190,7 @@ template <typename Tuple>
 inline constexpr size_t tuple_size_v = tuple_size<Tuple>::value;
 
 template <std::size_t N, typename... Rest>
-constexpr tuple_element_t<N, tuple<Rest...>>&
-get(tuple<Rest...>& t) noexcept {
+constexpr tuple_element_t<N, tuple<Rest...>>& get(tuple<Rest...>& t) noexcept {
   return t.get(in_place_index<N>);
 }
 
@@ -284,8 +286,7 @@ struct tuple_el_less<0> {
 } // namespace tuple_impl
 
 template <class... TTypes, class... URest>
-constexpr bool operator==(const tuple<TTypes...>& x,
-                          const tuple<URest...>& y) {
+constexpr bool operator==(const tuple<TTypes...>& x, const tuple<URest...>& y) {
   static_assert(sizeof...(TTypes) == sizeof...(URest),
                 "Tuples with different size are not comparable");
   return tuple_impl::tuple_el_equals<sizeof...(TTypes)>()(x, y);
