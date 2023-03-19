@@ -81,46 +81,45 @@ public:
 
     template <typename UFirst, typename... URest>
     constexpr tuple(UFirst&& arg, URest&&... args)
-        requires(std::conjunction_v<
-            std::bool_constant<sizeof...(URest) == sizeof...(Rest)>,
-                std::negation<std::is_same<std::remove_cvref_t<UFirst>, tuple>>,
-                std::is_constructible<First, UFirst>>)
+        requires(std::conjunction_v<std::bool_constant<sizeof...(URest) == sizeof...(Rest)>,
+    std::negation<std::is_same<std::remove_cvref_t<UFirst>, tuple>>,
+        std::is_constructible<First, UFirst>>)
         : first(std::move(arg)), rest(std::forward<URest>(args)...) {}
 
-            template <typename UFirst, typename... URest>
-            constexpr tuple(const tuple<UFirst, URest...>& other)
-                : first(other.first), rest(*static_cast<tuple<URest...> const*>(&other)) {
-            }
+    template <typename UFirst, typename... URest>
+    constexpr tuple(const tuple<UFirst, URest...>& other)
+        : first(other.first), rest(*static_cast<tuple<URest...> const*>(&other)) {
+    }
 
-            template <typename UFirst, typename... URest>
-            constexpr tuple(tuple<UFirst, URest...>&& other)
-                : first(std::move(other.first)),
-                rest(std::move(*static_cast<tuple<URest...>*>(&other))) {}
+    template <typename UFirst, typename... URest>
+    constexpr tuple(tuple<UFirst, URest...>&& other)
+        : first(std::move(other.first)),
+        rest(std::move(*static_cast<tuple<URest...>*>(&other))) {}
 
-            template <typename... Args>
-            friend struct tuple;
+    template <typename... Args>
+    friend struct tuple;
 
-            template <std::size_t N, typename... gTypes>
-            friend constexpr tuple_element_t<N, tuple<gTypes...>>&
-                get(tuple<gTypes...>& t) noexcept;
+    template <std::size_t N, typename... gTypes>
+    friend constexpr tuple_element_t<N, tuple<gTypes...>>&
+        get(tuple<gTypes...>& t) noexcept;
 
-            template <std::size_t N, typename... gTypes>
-            friend constexpr tuple_element_t<N, tuple<gTypes...>>&&
-                get(tuple<gTypes...>&& t) noexcept;
+    template <std::size_t N, typename... gTypes>
+    friend constexpr tuple_element_t<N, tuple<gTypes...>>&&
+        get(tuple<gTypes...>&& t) noexcept;
 
-            template <std::size_t N, typename... gTypes>
-            friend constexpr const tuple_element_t<N, tuple<gTypes...>>&
-                get(const tuple<gTypes...>& t) noexcept;
+    template <std::size_t N, typename... gTypes>
+    friend constexpr const tuple_element_t<N, tuple<gTypes...>>&
+        get(const tuple<gTypes...>& t) noexcept;
 
-            template <std::size_t N, typename... gTypes>
-            friend constexpr const tuple_element_t<N, tuple<gTypes...>>&&
-                get(const tuple<gTypes...>&& t) noexcept;
+    template <std::size_t N, typename... gTypes>
+    friend constexpr const tuple_element_t<N, tuple<gTypes...>>&&
+        get(const tuple<gTypes...>&& t) noexcept;
 
-            void swap(tuple& other) {
-                using std::swap;
-                std::swap(first, other.first);
-                static_cast<rest*>(this)->swap(*static_cast<rest*>(&other));
-            }
+    void swap(tuple& other) {
+        using std::swap;
+        std::swap(first, other.first);
+        static_cast<rest*>(this)->swap(*static_cast<rest*>(&other));
+    }
 
 private:
     template <size_t Index>
